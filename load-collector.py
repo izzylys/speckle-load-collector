@@ -30,7 +30,14 @@ def calcGain(roomData,sf):
     smallp_gain = roomData['Room Area']*roomData['Small Power Allowance (W/m2)']
     fab_gain = roomData['Room Area']*roomData['Fabric Allowance (W/m2)']
     tot = (occ_gain+light_gain+smallp_gain+fab_gain)*sf
-    return int(tot)
+    frame = {
+        'Occupancy': int(occ_gain),
+        'Lighting': int(light_gain),
+        'Small Power': int(smallp_gain),
+        'Fabric': int(fab_gain),
+        'Total': int(tot),
+    }
+    return frame
 
 def detwitchRounding(gain, prevgain = ''):
     for i,j in enumerate(thresh):
@@ -66,24 +73,31 @@ out_stream = 'ZLw_1GkWS2'
 load_results = {}
 for room, id in roomIDs.items():
     raw_gain = calcGain(getSpeckleRoomData(id),sf)
-    gain = detwitchRounding(raw_gain)
-    load_results[room] = gain
-
-pprint(load_results)
+    prev_gain = getSpeckleRoomData(out_stream)[room+' Total']
+    raw_gain['Total'] = detwitchRounding(raw_gain['Total'], prev_gain)
+    load_results[room] = raw_gain
+# pprint(load_results)
 
 #-----------------------------------------------------------------#
 # Format the parameters 
-params={
+params={ 
     'name': 'Load Calc Results',
-    'description': 'This stream is updated from a python script `load-collector.py` on {}'.format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-),
+    'description': 'This stream was updated from python script `load-collector.py` by {} on {}'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M")),
     'layers': [],
     'objects': [],
 }
 
-for i, (room,load) in enumerate(load_results.items()):
-    params['layers'].append({'name': room, 'guid': str(uuid.uuid4()), 'startIndex': i, 'objectCount': 1, 'topology': '0-1'})
-    params['objects'].append({'type': 'Number', 'value': load})
+for i,(room,loads) in enumerate(load_results.items()):
+    for j,(name,value) in enumerate(loads.items()):
+        params['layers'].append({
+            'name': room+' '+name,
+            'guid': str(uuid.uuid4()),
+            'startIndex': j+i*len(loads), 
+            'objectCount': 1, 
+            'topology': '0-1'
+        })
+        params['objects'].append({'type': 'Number', 'value': value})
+# pprint(params)
 
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
