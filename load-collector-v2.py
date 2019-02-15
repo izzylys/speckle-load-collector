@@ -147,26 +147,9 @@ for i,room in enumerate(room_data):
 # Format the parameters 
 # 'yes' if you would like layers for each room and lists in each layer with results
 params = formatParams(load_results,'yes')
-
 #pprint(params)
 
 
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
 print(update.json())
-
-
-'''
-to get a list of all the results with a unique layer name:
-
-for i,(room,loads) in enumerate(load_results.items()):
-    for j,(name,value) in enumerate(loads.items()):
-        params['layers'].append({
-            'name': room+' '+name,
-            'guid': str(uuid.uuid4()),
-            'startIndex': j+i*len(loads), 
-            'objectCount': 1, 
-            'topology': '0-1'
-        })
-        params['objects'].append({'type': 'Number', 'value': value})
-'''
