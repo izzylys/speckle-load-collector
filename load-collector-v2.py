@@ -101,8 +101,12 @@ room_data = getSpeckleLists(room_stream)
 design_data = getSpeckleObjects(design_brief)
 for i,room in enumerate(room_data):
     raw_gain = calcGain(list(room.values())[0][0],design_data,sf)
-    prev_gain = list(getSpeckleLists(out_stream)[i].values())[0][-1]
-    raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
+    try:
+        prev_gain = list(getSpeckleLists(out_stream)[i].values())[0][-1]
+        raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
+    except:
+        raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
+        pass
     load_results[list(room.keys())[0]] = raw_gain
 
 pprint(load_results)
@@ -110,7 +114,7 @@ pprint(load_results)
 #-----------------------------------------------------------------#
 # Format the parameters 
 params={ 
-    'name': 'Load Calc Results',
+    'name': 'Load Calc Results v2',
     'description': 'This stream was updated from `load-collector-v2.py` by {} on {} \n\n The data is in the form \n\n `{}`'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),list(list(load_results.values())[0].keys())),
     'layers': [],
     'objects': [],
@@ -137,16 +141,17 @@ update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(ou
 print(update.json())
 
 
-
 '''
+to get a list of all the results with a unique layer name:
+
 for i,(room,loads) in enumerate(load_results.items()):
-    params['layers'].append({
-        'name': room,
-        'guid': str(uuid.uuid4()),
-        'startIndex': i*len(loads),
-        'objectCount': len(loads),
-        'topology': '0-{}'.format(len(loads)),
-    })
-    for val in loads.items():
-        params['objects'].append({'type': 'Null', 'value': val})
+    for j,(name,value) in enumerate(loads.items()):
+        params['layers'].append({
+            'name': room+' '+name,
+            'guid': str(uuid.uuid4()),
+            'startIndex': j+i*len(loads), 
+            'objectCount': 1, 
+            'topology': '0-1'
+        })
+        params['objects'].append({'type': 'Number', 'value': value})
 '''
