@@ -45,7 +45,6 @@ def getSpeckleLists(streamid):
         store.append(frame)
     return store
 
-
 def calcGain(roomArea, designData,sf):
     sens_gain = designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (sensible)']
     lat_gain = designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (latent)']
@@ -84,16 +83,11 @@ speck.set_profile(creds['server'],creds['apitoken'])
 sf = 1.1        # safety factor
 thresh = [0,100,1000,5000,20000]        # rounding threshold
 step = [0,20,100,200,500,1000]          # rounding step size
-out_stream = 'Lbjn7PdIKf'
 
 # stream IDs
-roomIDs = {
-    'Room1': 'EBw4nQ7gD',
-    'Room2': 'a9NLpf663j',
-    'Room3': 'EUAxQF85Pn',
-}
 room_stream = 'Zzby8Jdnc1'
 design_brief = '6TE2S1YBk'
+out_stream = 'Lbjn7PdIKf'
 
 # get room data and calculate the load in each room
 load_results = {}
@@ -108,8 +102,7 @@ for i,room in enumerate(room_data):
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
         pass
     load_results[list(room.keys())[0]] = raw_gain
-
-pprint(load_results)
+#pprint(load_results)
 
 #-----------------------------------------------------------------#
 # Format the parameters 
@@ -131,9 +124,7 @@ for i,(room,loads) in enumerate(load_results.items()):
     })
     for (name,value) in loads.items():
         params['objects'].append({'name': name, 'type': 'Number', 'value': value})
-
-pprint(params)
-
+#pprint(params)
 
 
 # Update the stream
