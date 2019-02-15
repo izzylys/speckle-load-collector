@@ -9,7 +9,7 @@ A single stream is set up with the rooms as layers and the data as objects in ea
 
 The room gain is calculated by pulling parameters from a design brief stream and includes occupancy, lighting, small power, and fabric with a 10% safety factor. The result is rounded based on specified rounding rules and pushed to a Load Calc Results v2 stream.
 
-As is, the output writes layers for each room with a list of results for each room. The commented out section will push out layers for each piece of data with each layer only having one object.
+As is, the output writes layers for each room with a list of results for each layer. Passing anything other than `'yes'` to the function `formatParameters()` will give you an output with each piece of data as its own layer.
 
 ## for v1
 Each room is set up as a different stream and the `streamId` is specified in the script.
