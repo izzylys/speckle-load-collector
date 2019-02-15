@@ -9,6 +9,7 @@ import simplejson as json
 from pprint import pprint
 from speckleProfile import creds, headers
 #-----------------------------------------------------------------#
+# pull speckle data if each layer has one object
 def getSpeckleObjects(streamid):
     stream = speck.StreamGetAsync(streamid)
     layers = stream['resource']['layers']
@@ -24,6 +25,7 @@ def getSpeckleObjects(streamid):
     results = dict(zip(layer_name, values))
     return results
 
+# pull speckle data if each layer has several (but the same number) of objects
 def getSpeckleLists(streamid):
     stream = speck.StreamGetAsync(streamid)
     layers = stream['resource']['layers']
@@ -45,6 +47,7 @@ def getSpeckleLists(streamid):
         store.append(frame)
     return store
 
+# calculate the room gain
 def calcGain(roomArea, designData,sf):
     sens_gain = designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (sensible)']
     lat_gain = designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (latent)']
@@ -62,6 +65,7 @@ def calcGain(roomArea, designData,sf):
     }
     return frame
 
+# apply rounding rules to stabalize results
 def detwitchRounding(gain, prevgain = ''):
     for i,j in enumerate(thresh):
         if gain <= j:
@@ -74,6 +78,41 @@ def detwitchRounding(gain, prevgain = ''):
         if abs(prevgain-gain) < base:
             val = int(base*round(prevgain/base))
     return val
+
+# format the parameters in the appropriate way
+def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
+    params={ 
+    'name': 'Load Calc Results v2',
+    'description': '',
+    'layers': [],
+    'objects': [],
+    }
+
+    if lists_yes_no == 'yes':
+        params['description'] = 'This stream was updated from `load-collector-v2.py` by {} on {} \n\n The data is in the form \n\n `{}`'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),list(list(data.values())[0].keys()))
+        for i,(room,loads) in enumerate(data.items()):
+            params['layers'].append({
+                'name': room,
+                'guid': str(uuid.uuid4()),
+                'startIndex': i*len(loads),
+                'objectCount': len(loads),
+                'topology': '0-{}'.format(len(loads)),
+            })
+            for (name,value) in loads.items():
+                params['objects'].append({'name': name, 'type': 'Number', 'value': value})
+    else:
+        params['description'] = 'This stream was updated from `load-collector-v2.py` by {} on {}'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+        for i,(room,loads) in enumerate(load_results.items()):
+            for j,(name,value) in enumerate(loads.items()):
+                params['layers'].append({
+                    'name': room+' '+name,
+                    'guid': str(uuid.uuid4()),
+                    'startIndex': j+i*len(loads), 
+                    'objectCount': 1, 
+                    'topology': '0-1'
+                })
+                params['objects'].append({'type': 'Number', 'value': value})
+    return params
 #-----------------------------------------------------------------#
 # start up PySpeckle and autenticate
 speck = speckle.SpeckleApiClient()
@@ -106,24 +145,9 @@ for i,room in enumerate(room_data):
 
 #-----------------------------------------------------------------#
 # Format the parameters 
-params={ 
-    'name': 'Load Calc Results v2',
-    'description': 'This stream was updated from `load-collector-v2.py` by {} on {} \n\n The data is in the form \n\n `{}`'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),list(list(load_results.values())[0].keys())),
-    'layers': [],
-    'objects': [],
-}
+# 'yes' if you would like layers for each room and lists in each layer with results
+params = formatParams(load_results,'yes')
 
-
-for i,(room,loads) in enumerate(load_results.items()):
-    params['layers'].append({
-        'name': room,
-        'guid': str(uuid.uuid4()),
-        'startIndex': i*len(loads),
-        'objectCount': len(loads),
-        'topology': '0-{}'.format(len(loads)),
-    })
-    for (name,value) in loads.items():
-        params['objects'].append({'name': name, 'type': 'Number', 'value': value})
 #pprint(params)
 
 
