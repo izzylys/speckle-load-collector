@@ -74,15 +74,15 @@ load_results = {}
 for room, id in roomIDs.items():
     raw_gain = calcGain(getSpeckleRoomData(id),sf)
     prev_gain = getSpeckleRoomData(out_stream)[room+' Total']
-    raw_gain['Total'] = detwitchRounding(raw_gain['Total'], prev_gain)
+    raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
     load_results[room] = raw_gain
 # pprint(load_results)
 
 #-----------------------------------------------------------------#
 # Format the parameters 
 params={ 
-    'name': 'Load Calc Results',
-    'description': 'This stream was updated from python script `load-collector.py` by {} on {}'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M")),
+    'name': 'Load Calc Results v1',
+    'description': 'This stream was updated from `load-collector.py` by {} on {}'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M")),
     'layers': [],
     'objects': [],
 }
