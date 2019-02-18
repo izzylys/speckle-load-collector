@@ -46,8 +46,8 @@ def getSpeckleLists(streamid):
 
 # calculate the room gain
 def calcGain(roomArea, designData,sf):
-    sens_gain = designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (sensible)']
-    lat_gain = designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (latent)']
+    sens_gain = roomArea/designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (sensible)']
+    lat_gain = roomArea/designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (latent)']
     light_gain = roomArea*designData['Lighting Allowance [W/m2]']
     smallp_gain = roomArea*designData['Small Power Allowance [W/m2]']
     fab_gain = roomArea*designData['Fabric Allowance [W/m2]']
@@ -86,20 +86,22 @@ def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
     }
 
     if lists_yes_no == 'yes':
-        params['description'] = 'This stream was updated from `load-collector-v2.py` by {} on {} \n\n The data is in the form \n\n `{}`'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),list(list(data.values())[0].keys()))
-        for i,(room,loads) in enumerate(data.items()):
+        params['description'] = 'This stream was updated from `load-collector-v2.py` by {} on {} \n\n '.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+        for i,name in enumerate(data['room 1'].keys()):
             params['layers'].append({
-                'name': room,
+                'name': name,
                 'guid': str(uuid.uuid4()),
-                'startIndex': i*len(loads),
-                'objectCount': len(loads),
-                'topology': '0-{}'.format(len(loads)),
+                'startIndex': i*len(room_data),
+                'objectCount': len(room_data),
+                'topology': '0-{}'.format(len(room_data)),
             })
-            for (name,value) in loads.items():
-                params['objects'].append({'name': name, 'type': 'Number', 'value': value})
+            for room,load in data.items():
+                params['objects'].append({'name': name, 'type': 'Number', 'value': load[name]})
+    '''
+    broken after transposed output format -- will fix later
     else:
         params['description'] = 'This stream was updated from `load-collector-v2.py` by {} on {}'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
-        for i,(room,loads) in enumerate(load_results.items()):
+        for i,(room,loads) in enumerate(data.items()):
             for j,(name,value) in enumerate(loads.items()):
                 params['layers'].append({
                     'name': room+' '+name,
@@ -109,6 +111,7 @@ def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
                     'topology': '0-{}'.format(len(loads))
                 })
                 params['objects'].append({'type': 'Number', 'value': value})
+    '''
     return params
 #-----------------------------------------------------------------#
 # start up PySpeckle and autenticate
@@ -128,13 +131,13 @@ out_stream = 'Lbjn7PdIKf'
 # get room data and calculate the load in each room
 load_results = {}
 room_data = getSpeckleLists(room_stream)
-pprint(room_data)
+# pprint(room_data)
 design_data = getSpeckleObjects(design_brief)
 
 for i,area in enumerate(room_data['area']):
     raw_gain = calcGain(area,design_data,sf)
     try:
-        prev_gain = getSpeckleLists(out_stream)[room_data['name'][i]][-1]
+        prev_gain = getSpeckleLists(out_stream)['Total'][i]
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
     except:
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
@@ -142,13 +145,11 @@ for i,area in enumerate(room_data['area']):
     load_results[room_data['name'][i]] = raw_gain
 
 
-pprint(load_results)
-
 #-----------------------------------------------------------------#
 # Format the parameters 
 # 'yes' if you would like layers for each room and lists in each layer with results
 params = formatParams(load_results,'yes')
-pprint(params)
+# pprint(params)
 
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
