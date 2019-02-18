@@ -38,13 +38,10 @@ def getSpeckleLists(streamid):
     for o in objects:
         values.append(speck.ObjectGetAsync(o['_id'])['resource']['value'])
 
-    store = []
+    store = {}
     length = int(len(objects)/len(layer_name))
     for i,layer in enumerate(layer_name):
-        frame = {
-            layer: values[i*length:i*length+length]
-        }
-        store.append(frame)
+        store[layer] = list(values[i*length:i*length+length])
     return store
 
 # calculate the room gain
@@ -108,8 +105,8 @@ def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
                     'name': room+' '+name,
                     'guid': str(uuid.uuid4()),
                     'startIndex': j+i*len(loads), 
-                    'objectCount': 1, 
-                    'topology': '0-1'
+                    'objectCount': len(loads), 
+                    'topology': '0-{}'.format(len(loads))
                 })
                 params['objects'].append({'type': 'Number', 'value': value})
     return params
@@ -131,24 +128,27 @@ out_stream = 'Lbjn7PdIKf'
 # get room data and calculate the load in each room
 load_results = {}
 room_data = getSpeckleLists(room_stream)
+pprint(room_data)
 design_data = getSpeckleObjects(design_brief)
-for i,room in enumerate(room_data):
-    raw_gain = calcGain(list(room.values())[0][0],design_data,sf)
+
+for i,area in enumerate(room_data['area']):
+    raw_gain = calcGain(area,design_data,sf)
     try:
-        prev_gain = list(getSpeckleLists(out_stream)[i].values())[0][-1]
+        prev_gain = getSpeckleLists(out_stream)[room_data['name'][i]][-1]
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
     except:
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
         pass
-    load_results[list(room.keys())[0]] = raw_gain
-#pprint(load_results)
+    load_results[room_data['name'][i]] = raw_gain
+
+
+pprint(load_results)
 
 #-----------------------------------------------------------------#
 # Format the parameters 
 # 'yes' if you would like layers for each room and lists in each layer with results
 params = formatParams(load_results,'yes')
-#pprint(params)
-
+pprint(params)
 
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
