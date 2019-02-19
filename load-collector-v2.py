@@ -124,9 +124,17 @@ thresh = [0,100,1000,5000,20000]        # rounding threshold
 step = [0,20,100,200,500,1000]          # rounding step size
 
 # stream IDs
-room_stream = 'Zzby8Jdnc1'
-design_brief = '6TE2S1YBk'
-out_stream = 'Lbjn7PdIKf'
+
+
+
+if input('Enter your own streams? (Y/N):  ') == 'Y':
+    room_stream = input('Room Stream ID:')
+    design_brief = input('Design Brief Stream ID:')
+    out_stream = input('Output Stream ID:')
+else:
+    room_stream = 'Zzby8Jdnc1'
+    design_brief = '6TE2S1YBk'
+    out_stream = 'Lbjn7PdIKf'
 
 # get room data and calculate the load in each room
 load_results = {}
