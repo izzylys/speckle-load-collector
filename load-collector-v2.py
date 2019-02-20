@@ -95,6 +95,7 @@ def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
                 'startIndex': i*len(data),
                 'objectCount': len(data),
                 'topology': '0-{}'.format(len(data)),
+                'orderIndex': i
             })
             for room in data:
                 params['objects'].append({'name': name, 'type': 'Number', 'value': room[1][name]})
@@ -170,3 +171,4 @@ params = formatParams(load_results,'yes')
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
 print(update.json())
+
