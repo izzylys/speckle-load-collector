@@ -99,21 +99,20 @@ def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
             })
             for room in data:
                 params['objects'].append({'name': name, 'type': 'Number', 'value': room[1][name]})
-    '''
-    broken after transposed output format -- will fix later
+
     else:
         params['description'] = 'This stream was updated from `load-collector-v2.py` by {} on {}'.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
-        for i,(room,loads) in enumerate(data.items()):
-            for j,(name,value) in enumerate(loads.items()):
+        for i,room in enumerate(data):
+            for j,(name,value) in enumerate(room[1].items()):
                 params['layers'].append({
-                    'name': room+' '+name,
+                    'name': room[0]+' '+name,
                     'guid': str(uuid.uuid4()),
-                    'startIndex': j+i*len(loads), 
-                    'objectCount': len(loads), 
-                    'topology': '0-{}'.format(len(loads))
+                    'startIndex': j+i, 
+                    'objectCount': 1, 
+                    'topology': '0-1'
                 })
                 params['objects'].append({'type': 'Number', 'value': value})
-    '''
+
     return params
 #-----------------------------------------------------------------#
 # start up PySpeckle and autenticate
@@ -131,7 +130,7 @@ if input('Enter your own streams? (Y/N):  ') == 'Y':
     design_brief = input('Design Brief Stream ID:')
     out_stream = input('Output Stream ID:')
 else:
-    '''
+    
     room_stream = 'y2DlFS1Yt'
     design_brief = '6TE2S1YBk'
     out_stream = 'dP-bQxpez'
@@ -139,6 +138,7 @@ else:
     room_stream = 'Zzby8Jdnc1'
     design_brief = '6TE2S1YBk'
     out_stream = 'Lbjn7PdIKf'
+    '''
 
 # get room data and calculate the load in each room
 room_data = getSpeckleLists(room_stream)
@@ -158,7 +158,7 @@ for i,area in enumerate(room_data['area']):
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
         pass
     load_results.append((room_data['name'][i], raw_gain))
-
+pprint(load_results)
 #-----------------------------------------------------------------#
 # Format the parameters 
 # 'yes' if you would like layers for each room and lists in each layer with results
