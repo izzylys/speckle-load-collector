@@ -126,22 +126,19 @@ thresh = [0,100,1000,5000,20000]        # rounding threshold
 step = [0,20,100,200,500,1000]          # rounding step size
 
 # stream IDs
-
-
-
 if input('Enter your own streams? (Y/N):  ') == 'Y':
     room_stream = input('Room Stream ID:')
     design_brief = input('Design Brief Stream ID:')
     out_stream = input('Output Stream ID:')
 else:
+    '''
     room_stream = 'y2DlFS1Yt'
     design_brief = '6TE2S1YBk'
     out_stream = 'dP-bQxpez'
     '''
     room_stream = 'Zzby8Jdnc1'
     design_brief = '6TE2S1YBk'
-    out_stream = 'Lbjn7PdIKf' '''
-    
+    out_stream = 'Lbjn7PdIKf'
 
 # get room data and calculate the load in each room
 room_data = getSpeckleLists(room_stream)
@@ -166,7 +163,6 @@ for i,area in enumerate(room_data['area']):
 # Format the parameters 
 # 'yes' if you would like layers for each room and lists in each layer with results
 params = formatParams(load_results,'yes')
-# pprint(params)
 
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
