@@ -46,11 +46,11 @@ def getSpeckleLists(streamid):
 
 # calculate the room gain
 def calcGain(roomArea, designData,sf):
-    sens_gain = roomArea/designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (sensible)']
-    lat_gain = roomArea/designData['Room Occupancy [sqm/pers]']*designData['Watts per Occupant (latent)']
-    light_gain = roomArea*designData['Lighting Allowance [W/m2]']
-    smallp_gain = roomArea*designData['Small Power Allowance [W/m2]']
-    fab_gain = roomArea*designData['Fabric Allowance [W/m2]']
+    sens_gain = roomArea/float(designData['Room Occupancy [sqm/pers]'])*float(designData['Occ Sens [W/pers]'])
+    lat_gain = roomArea/float(designData['Room Occupancy [sqm/pers]'])*float(designData['Occ Lat [W/pers]'])
+    light_gain = roomArea*float(designData['Lighting Allowance [W/m2]'])
+    smallp_gain = roomArea*float(designData['Small Power Allowance [W/m2]'])
+    fab_gain = roomArea*float(designData['Fabric Allowance [W/m2]'])
     tot = (sens_gain+lat_gain+light_gain+smallp_gain+fab_gain)*sf
     frame = {
         'Sensible': int(sens_gain),
@@ -145,7 +145,7 @@ design_data = getSpeckleObjects(design_brief)
 for i,area in enumerate(room_data['area']):
     raw_gain = calcGain(area,design_data,sf)
     try:
-        prev_gain = getSpeckleLists(out_stream)['Total'][i]
+        prev_gain = int(getSpeckleLists(out_stream)['Total'][i])
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
     except:
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
@@ -162,3 +162,14 @@ params = formatParams(load_results,'yes')
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
 print(update.json())
+
+'''
+guids = [
+    '81143080-5a18-4214-9037-3f437147daa5',
+    'abc95c2a-21c1-476b-9efa-5819c4376a1c',
+    '473ac726-c8f8-4bb6-ab2a-a343a921874c',
+    '8eb32b26-31e6-4575-bdcb-271cc4767254',
+    '1a734007-0857-44d3-a77e-2aa5ca2ced14',
+    '01a97a77-f9e5-46bd-bbe7-102d005b8519'
+    ]
+'''
