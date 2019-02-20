@@ -64,7 +64,7 @@ def calcGain(roomArea, designData,sf):
     return frame
 
 # apply rounding rules to stabalize results
-def detwitchRounding(gain, prevgain = ''):
+def stableRounding(gain, prevgain = ''):
     for i,j in enumerate(thresh):
         if gain <= j:
             base = step[i]
@@ -153,9 +153,9 @@ for i,area in enumerate(room_data['area']):
     raw_gain = calcGain(area,design_data,sf)
     try:
         prev_gain = int(store_prev[i])
-        raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
+        raw_gain['Total'] = stableRounding(raw_gain['Total'],prev_gain)
     except:
-        raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
+        raw_gain['Total'] = stableRounding(raw_gain['Total'])
         pass
     load_results.append((room_data['name'][i], raw_gain))
 
