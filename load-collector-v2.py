@@ -94,6 +94,7 @@ def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
                 'startIndex': i*len(room_data),
                 'objectCount': len(room_data),
                 'topology': '0-{}'.format(len(room_data)),
+                'orderIndex': i
             })
             for room,load in data.items():
                 params['objects'].append({'name': name, 'type': 'Number', 'value': load[name]})
