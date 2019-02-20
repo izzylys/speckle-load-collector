@@ -158,7 +158,7 @@ for i,area in enumerate(room_data['area']):
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
         pass
     load_results.append((room_data['name'][i], raw_gain))
-pprint(load_results)
+
 #-----------------------------------------------------------------#
 # Format the parameters 
 # 'yes' if you would like layers for each room and lists in each layer with results
