@@ -7,6 +7,7 @@ import uuid
 import datetime
 import simplejson as json
 from pprint import pprint
+import collections as c
 from speckleProfile import creds, headers
 #-----------------------------------------------------------------#
 # pull speckle data if each layer has one object
@@ -87,16 +88,16 @@ def formatParams(data,lists_yes_no):    # 'yes' for lists for each room layer
 
     if lists_yes_no == 'yes':
         params['description'] = 'This stream was updated from `load-collector-v2.py` by {} on {} \n\n '.format(creds['name'],datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
-        for i,name in enumerate(data['room 1'].keys()):
+        for i,name in enumerate(data[0][1].keys()):
             params['layers'].append({
                 'name': name,
                 'guid': str(uuid.uuid4()),
-                'startIndex': i*len(room_data),
-                'objectCount': len(room_data),
-                'topology': '0-{}'.format(len(room_data)),
+                'startIndex': i*len(data),
+                'objectCount': len(data),
+                'topology': '0-{}'.format(len(data)),
             })
-            for room,load in data.items():
-                params['objects'].append({'name': name, 'type': 'Number', 'value': load[name]})
+            for room in data:
+                params['objects'].append({'name': name, 'type': 'Number', 'value': room[1][name]})
     '''
     broken after transposed output format -- will fix later
     else:
@@ -132,26 +133,33 @@ if input('Enter your own streams? (Y/N):  ') == 'Y':
     design_brief = input('Design Brief Stream ID:')
     out_stream = input('Output Stream ID:')
 else:
+    room_stream = 'y2DlFS1Yt'
+    design_brief = '6TE2S1YBk'
+    out_stream = 'dP-bQxpez'
+    '''
     room_stream = 'Zzby8Jdnc1'
     design_brief = '6TE2S1YBk'
-    out_stream = 'Lbjn7PdIKf'
+    out_stream = 'Lbjn7PdIKf' '''
+    
 
 # get room data and calculate the load in each room
-load_results = {}
 room_data = getSpeckleLists(room_stream)
 # pprint(room_data)
 design_data = getSpeckleObjects(design_brief)
-
+try:
+    store_prev = getSpeckleLists(out_stream)['Total']
+except:
+    pass
+load_results = []
 for i,area in enumerate(room_data['area']):
     raw_gain = calcGain(area,design_data,sf)
     try:
-        prev_gain = int(getSpeckleLists(out_stream)['Total'][i])
+        prev_gain = int(store_prev[i])
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'],prev_gain)
     except:
         raw_gain['Total'] = detwitchRounding(raw_gain['Total'])
         pass
-    load_results[room_data['name'][i]] = raw_gain
-
+    load_results.append((room_data['name'][i], raw_gain))
 
 #-----------------------------------------------------------------#
 # Format the parameters 
@@ -162,14 +170,3 @@ params = formatParams(load_results,'yes')
 # Update the stream
 update = requests.put('https://hestia.speckle.works/api/v1/streams/{}'.format(out_stream), json = params, headers = headers)
 print(update.json())
-
-'''
-guids = [
-    '81143080-5a18-4214-9037-3f437147daa5',
-    'abc95c2a-21c1-476b-9efa-5819c4376a1c',
-    '473ac726-c8f8-4bb6-ab2a-a343a921874c',
-    '8eb32b26-31e6-4575-bdcb-271cc4767254',
-    '1a734007-0857-44d3-a77e-2aa5ca2ced14',
-    '01a97a77-f9e5-46bd-bbe7-102d005b8519'
-    ]
-'''
