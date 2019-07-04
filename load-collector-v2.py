@@ -11,9 +11,8 @@ import collections as c
 from speckleProfile import creds, headers
 
 
-#-----------------------------------------------------------------#
-# pull speckle data if each layer has one object
-def getSpeckleObjects(streamid):
+def getSpeckleObjects(streamid) -> dict:
+    '''pull speckle data if each layer has one object'''
     stream = speck.StreamGetAsync(streamid)
     layers = stream['resource']['layers']
     layer_name = []
@@ -29,8 +28,8 @@ def getSpeckleObjects(streamid):
     return results
 
 
-# pull speckle data if each layer has several (but the same number) of objects
-def getSpeckleLists(streamid):
+def getSpeckleLists(streamid) -> dict:
+    '''ull speckle data if each layer has several (but the same number) of objects'''
     stream = speck.StreamGetAsync(streamid)
     layers = stream['resource']['layers']
     layer_name = []
@@ -50,7 +49,7 @@ def getSpeckleLists(streamid):
 
 
 # calculate the room gain
-def calcGain(roomArea, designData, sf):
+def calcGain(roomArea, designData, sf) -> dict:
     sens_gain = roomArea / float(
         designData['Room Occupancy [sqm/pers]']) * float(
             designData['Occ Sens [W/pers]'])
@@ -73,7 +72,7 @@ def calcGain(roomArea, designData, sf):
 
 
 # apply rounding rules to stabalize results
-def stableRounding(gain, prevgain=''):
+def stableRounding(gain, prevgain='') -> int:
     for i, j in enumerate(thresh):
         if gain <= j:
             base = step[i]
@@ -87,8 +86,10 @@ def stableRounding(gain, prevgain=''):
     return val
 
 
-# format the parameters in the appropriate way
-def formatParams(data, lists_yes_no):  # 'yes' for lists for each room layer
+def formatParams(data, lists_yes_no) -> dict:
+    '''format the parameters to be accepted into speckle stream
+    "yes" for lists for each room layer
+    '''
     params = {
         'name': 'Load Calc Results v2',
         'description': '',
