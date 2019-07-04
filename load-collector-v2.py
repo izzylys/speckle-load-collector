@@ -48,8 +48,8 @@ def getSpeckleLists(streamid) -> dict:
     return store
 
 
-# calculate the room gain
 def calcGain(roomArea, designData, sf) -> dict:
+    '''calculate the room gains'''
     sens_gain = roomArea / float(
         designData['Room Occupancy [sqm/pers]']) * float(
             designData['Occ Sens [W/pers]'])
@@ -71,8 +71,8 @@ def calcGain(roomArea, designData, sf) -> dict:
     return frame
 
 
-# apply rounding rules to stabalize results
 def stableRounding(gain, prevgain='') -> int:
+    '''apply rounding rules to stabalize results'''
     for i, j in enumerate(thresh):
         if gain <= j:
             base = step[i]
